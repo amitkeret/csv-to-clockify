@@ -1,0 +1,116 @@
+<html>
+<head>
+  <title>CVS to Clockify REST API</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.10/css/bootstrap-select.min.css" />
+  <link rel="stylesheet" crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.14.2/bootstrap-table.min.css" />
+  <link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css" />
+  <link rel="stylesheet" crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css" />
+  <style language="stylus">
+  
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="row py-3"><div class="col"><h3>CVS to Clockify REST API</h3></div></div>
+  <div class="row mb-4">
+    <div class="col">
+      <h5>API Key</h5>
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text"><i class="material-icons">vpn_key</i></span>
+        </div>
+        <input type="text" class="form-control" name="api_key" id="api-key" placeholder="API key" />
+      </div>
+      <h5 class="mt-3">Timestamp</h5>
+      <div class="row">
+        <div class="col">
+          <div class="form-group">
+            <label for="tz-format">Format <small><a target="_blank" href="https://momentjs.com/docs/#/parsing/string-format/">(Docs)</a></small></label>
+            <input type="text" class="form-control form-control-sm" id="tz-format" placeholder="DD/MM/YYYY">
+          </div>
+        </div>
+        <div class="col">
+          <div class="form-group">
+            <label for="tz-timezone">Timezone</label>
+            <select type="text" class="form-control form-control-sm" data-live-search="true" title="Choose one..." id="tz-timezone"></select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="form-inline">
+        <h5 class="mr-3 mt-1">Workspaces</h5>
+        <button class="btn btn-primary" type="button" id="get-workspaces">List</button>
+        <i class="material-icons animated infinite rotateIn d-none">cached</i>
+      </div>
+      <div id="workspaces-list"></div>
+    </div>
+    <div class="col">
+      <div class="form-inline">
+        <h5 class="mr-3 mt-1">Projects</h5>
+        <button class="btn btn-primary" type="button" id="get-projects">List</button>
+        <i class="material-icons animated infinite rotateIn d-none">cached</i>
+      </div>
+      <div id="projects-list"></div>
+    </div>
+    <div class="col-sm-2">
+      <h5>Billing</h5>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="billable" id="billable-yes" value="true" checked>
+        <label class="form-check-label" for="billable-yes">Billable</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="billable" id="billable-no" value="false">
+        <label class="form-check-label" for="billable-no">Non-billable</label>
+      </div>
+    </div>
+  </div>
+  <hr />
+  <div class="row mb-3">
+    <div class="col">
+      <input type="file" accept=".csv" class="form-control-file mt-2" id="csv-file" name="csv_file" />
+    </div>
+    <div class="col">
+      <button type="button" id="send-entries" class="btn btn-lg btn-primary btn-block" disabled>Send entries</button>
+    </div>
+  </div>
+  <div class="row"><div class="col">
+    <table class="table">
+      <thead>
+        <th>Start</th>
+        <th>End</th>
+        <th>Description</th>
+        <th>Status</th>
+      </thead>
+    </table>
+  </div></div>
+</div>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/jquery"></script>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/popper.js"></script>
+<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.10/js/bootstrap-select.min.js"></script>
+<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.14.2/bootstrap-table.min.js"></script>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse"></script>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/gh/PulsarBlow/everest.js/dist/everest.min.js"></script>
+<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.25/moment-timezone-with-data.min.js"></script>
+<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+<script type="text/coffeescript" src="./main.coffee"></script>
+
+<script crossorigin="anonymous" src="https://coffeescript.org/v2/browser-compiler-legacy/coffeescript.js"></script>
+<script crossorigin="anonymous" src="http://stylus-lang.com/try/stylus.min.js"></script>
+<script>
+document.head.querySelectorAll('style[language="stylus"]').forEach(function(el, index){
+  stylus(el.innerText.trim()).render(function(err, str){
+    var s = document.createElement('style')
+    s.innerHTML = str
+    document.head.appendChild(s)
+    el.parentNode.removeChild(el)
+  })
+})
+</script>
+</body>
+</html>
